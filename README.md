@@ -7,7 +7,7 @@ Some changes were:
 - additional placeholders needed to support the new APIs (source_sequence_length and target_sequence_length)
 
 I also added some additional features to make this model seem more like the model in the paper [Neural Machine Translation by Jointly Learning to Align and Translate](https://arxiv.org/abs/1409.0473) by introducing:
-- Bidirectional LSTMs using tf.nn.bidirectional_dynamic_rnn
+- Bidirectional LSTMs using tf.nn.bidirectional_dynamic_rnn. Using bidirectional LSTMs make sense as in the context of translation we do not only look backward but also forward as the use of a word at the back may influence how its used in the beginning (think grammar and vocab rules).
 ```
     enc_output, enc_state = tf.nn.bidirectional_dynamic_rnn(
                         cell_fw=enc_cell,
@@ -16,7 +16,7 @@ I also added some additional features to make this model seem more like the mode
                         inputs=enc_embed_input,
                         dtype=tf.float32) 
 ```
-- Bahdanau attention (additive) using a few functions as show below
+- Bahdanau attention (additive) using a few functions as show below. Unlike the original seq2seq model by [Sutskever et al.](https://papers.nips.cc/paper/5346-sequence-to-sequence-learning-with-neural-networks.pdf) where the context vector of the encoder-decoder is fixed, the attention mechanism makes it such that every position in the output sequence has its own context vector. This allows the decoder to have a peek at every position in the encoder and builds up even longer term dependencies than with purely LSTMs.
 ```    
     attention_mechanism = tf.contrib.seq2seq.BahdanauAttention(num_units=rnn_size,
                     memory=encoder_output, memory_sequence_length=source_sequence_length)
