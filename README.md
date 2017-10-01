@@ -7,9 +7,25 @@ Some changes were:
 - additional placeholders needed to support the new APIs (source_sequence_length and target_sequence_length)
 
 I also added some additional features to make this model seem more like the model in the paper [Neural Machine Translation by Jointly Learning to Align and Translate](https://arxiv.org/abs/1409.0473) by introducing:
-- Bidirectional LSTMs and
-- Bahdanau attention (additive)
-
+- Bidirectional LSTMs using tf.nn.bidirectional_dynamic_rnn
+```
+    enc_output, enc_state = tf.nn.bidirectional_dynamic_rnn(
+                        cell_fw=enc_cell,
+                        cell_bw=enc_cell,
+                        sequence_length=source_sequence_length,
+                        inputs=enc_embed_input,
+                        dtype=tf.float32) 
+```
+- Bahdanau attention (additive) using a few functions as show below
+```    
+    attention_mechanism = tf.contrib.seq2seq.BahdanauAttention(num_units=rnn_size,
+                    memory=encoder_output, memory_sequence_length=source_sequence_length)
+    
+    attn_cell = tf.contrib.seq2seq.AttentionWrapper(dec_cell, attention_mechanism, 
+                                                   attention_layer_size=rnn_size)
+    
+    out_cell = tf.contrib.rnn.OutputProjectionWrapper(attn_cell, vocab_size, reuse=False) 
+``` 
 To do (if I have time):
 - add beam search decoder instead of the current greedy decoding (where the output word is just chosen based on max probability). In this way, we consider top K contenders at each position instead of the top contender only. This makes more sense as the top word for position 1 may not be the top word for the entire sequence generated. It might be the second or third from top instead. See this [link](https://www.quora.com/Why-is-beam-search-required-in-sequence-to-sequence-transduction-using-recurrent-neural-networks) for more details.
 - train on bigger corpus (need GPU hours though)
